@@ -1,0 +1,3 @@
+[submodule "crates/libconfig-cpp/libconfig"]
+	path = crates/libconfig-cpp/libconfig
+	url = ../libconfig
