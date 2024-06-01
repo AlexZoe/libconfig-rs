@@ -1,0 +1,4 @@
+[workspace]
+members = ["crates/libconfig-cpp"]
+
+resolver = "2"
