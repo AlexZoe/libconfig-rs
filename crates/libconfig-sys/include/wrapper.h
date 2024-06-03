@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <libconfig.h++>
 #include <memory>
 #include <string>
@@ -26,5 +27,29 @@ static void trycatch(Try &&func, Fail &&fail) noexcept try {
 
 }  // namespace behavior
 }  // namespace rust
+
+namespace libconfig {
+
+auto lookupValueU64(const Config &config, const char *path, uint64_t &value)
+    -> bool {
+  unsigned long long tmp;
+  if (config.lookupValue(path, tmp)) {
+    value = tmp;
+    return true;
+  }
+  return false;
+}
+
+auto lookupValueI64(const Config &config, const char *path, int64_t &value)
+    -> bool {
+  long long tmp;
+  if (config.lookupValue(path, tmp)) {
+    value = tmp;
+    return true;
+  }
+  return false;
+}
+
+}  // namespace libconfig
 
 using namespace libconfig;
