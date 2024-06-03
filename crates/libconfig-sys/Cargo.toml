@@ -1,0 +1,17 @@
+[package]
+name = "libconfig-sys"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cxx = "1.0.122"
+
+[build-dependencies]
+cxx-build = "1.0.122"
+libconfig-cpp = { version = "0.1", path = "../libconfig-cpp"}
+
+[dev-dependencies]
+clap = { version = "4.5.4", features = ["derive"] }
+
