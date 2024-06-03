@@ -12,6 +12,9 @@ fn main() {
     let mut cfg = libconfig_sys::ffi::Config_ctor();
     let s = CString::new(args.cfg_file).expect("CString: new failed");
     unsafe {
-        cfg.pin_mut().readFile(s.as_ptr());
+        match cfg.pin_mut().readFile(s.as_ptr()) {
+            Ok(_) => println!("ok"),
+            Err(err) => println!("err: {}", err),
+        };
     }
 }
