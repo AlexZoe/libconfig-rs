@@ -1,4 +1,4 @@
 [workspace]
-members = ["crates/libconfig-cpp", "crates/libconfig-sys"]
+members = [ "crates/libconfig","crates/libconfig-cpp", "crates/libconfig-sys"]
 
 resolver = "2"

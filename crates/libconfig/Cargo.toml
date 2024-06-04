@@ -1,0 +1,11 @@
+[package]
+name = "libconfig"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cxx = "1.0.122"
+libconfig-sys = { version = "0.1", path = "../libconfig-sys"}
+thiserror = "1.0.61"
