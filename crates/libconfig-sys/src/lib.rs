@@ -8,6 +8,8 @@ pub mod ffi {
 
         unsafe fn lookup(self: &Setting, path: *const c_char) -> Result<Pin<&mut Setting>>;
 
+        unsafe fn lookupSetting<'c>(cfg: Pin<&'c mut Setting>, path: *const c_char) -> Result<Pin<&'c mut Setting>>;
+
         type Config;
 
         #[cxx_name = "construct_unique"]
@@ -15,7 +17,6 @@ pub mod ffi {
 
         unsafe fn readFile(self: Pin<&mut Config>, filename: *const c_char) -> Result<()>;
 
-        unsafe fn getRoot(self: &Config) -> Result<Pin<&mut Setting>>;
         unsafe fn lookup(self: &Config, path: *const c_char) -> Result<Pin<&mut Setting>>;
 
         #[rust_name = "lookup_bool"]
@@ -38,5 +39,7 @@ pub mod ffi {
         // Can't use "[unsigned] long long" directly for now
         unsafe fn lookupValueI64(config: &Config, path: *const c_char, value: &mut i64) -> bool;
         unsafe fn lookupValueU64(config: &Config, path: *const c_char, value: &mut u64) -> bool;
+
+        unsafe fn getRootFromConfig<'c>(cfg: &'c Config) -> Pin<&'c mut Setting>;
     }
 }

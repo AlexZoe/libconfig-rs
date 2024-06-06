@@ -1,12 +1,29 @@
 use cxx::{let_cxx_string, UniquePtr};
 use libconfig_sys::ffi::lookupValueI64;
 use std::ffi::CString;
+use std::pin::Pin;
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
 pub enum LibconfigError {
     #[error("invalid file")]
     Invalid,
+}
+
+pub struct Setting<'a> {
+    inner: Pin<&'a mut libconfig_sys::ffi::Setting>,
+}
+
+impl <'a> Setting<'a> {
+    pub fn lookup(&'a mut self, path: &str) -> Result<Setting<'a>, LibconfigError> {
+        let s = CString::new(path).expect("invalid file");
+        unsafe {
+            match libconfig_sys::ffi::lookupSetting(self.inner.as_mut(), s.as_ptr()) {
+                Ok(res) => Ok(Setting {inner: res }),
+                Err(_) => Err(LibconfigError::Invalid)
+            }
+        }
+    }
 }
 
 pub struct Config {
@@ -27,6 +44,12 @@ impl Config {
                 Ok(_) => Ok(()),
                 Err(_) => Err(LibconfigError::Invalid),
             }
+        }
+    }
+
+    pub fn get_root<'a>(&'a self) -> Setting<'a> {
+        Setting {
+            inner: unsafe { libconfig_sys::ffi::getRootFromConfig(self.inner.as_ref().unwrap()) },
         }
     }
 
@@ -165,5 +188,12 @@ mod tests {
         let mut cfg = Config::new();
         assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
         assert_eq!(cfg.lookup_string("name"), Some(String::from("Some Name")));
+    }
+
+    #[test]
+    fn ok_on_lookup_root() {
+        let mut cfg = Config::new();
+        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert!(cfg.get_root().lookup("outer").is_ok());
     }
 }

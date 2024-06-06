@@ -30,6 +30,14 @@ static void trycatch(Try &&func, Fail &&fail) noexcept try {
 
 namespace libconfig {
 
+auto lookupSetting(Setting &setting, const char *path) -> Setting & {
+  return setting.lookup(path);
+}
+
+auto getRootFromConfig(const Config &config) -> Setting & {
+  return config.getRoot();
+}
+
 auto lookupValueU64(const Config &config, const char *path, uint64_t &value)
     -> bool {
   unsigned long long tmp;
