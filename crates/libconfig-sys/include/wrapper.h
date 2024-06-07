@@ -30,16 +30,12 @@ static void trycatch(Try &&func, Fail &&fail) noexcept try {
 
 namespace libconfig {
 
-auto lookupSetting(Setting &setting, const char *path) -> Setting & {
+auto lookupSettingFromSetting(Setting &setting, const char *path) -> Setting & {
   return setting.lookup(path);
 }
 
-auto getRootFromConfig(const Config &config) -> Setting & {
-  return config.getRoot();
-}
-
-auto lookupValueU64(const Config &config, const char *path, uint64_t &value)
-    -> bool {
+auto lookupValueU64FromSetting(const Setting &config, const char *path,
+                               uint64_t &value) -> bool {
   unsigned long long tmp;
   if (config.lookupValue(path, tmp)) {
     value = tmp;
@@ -48,8 +44,36 @@ auto lookupValueU64(const Config &config, const char *path, uint64_t &value)
   return false;
 }
 
-auto lookupValueI64(const Config &config, const char *path, int64_t &value)
-    -> bool {
+auto lookupValueI64FromSetting(const Setting &config, const char *path,
+                               int64_t &value) -> bool {
+  long long tmp;
+  if (config.lookupValue(path, tmp)) {
+    value = tmp;
+    return true;
+  }
+  return false;
+}
+
+auto getRootFromConfig(const Config &config) -> Setting & {
+  return config.getRoot();
+}
+
+auto lookupSettingFromConfig(Config &config, const char *path) -> Setting & {
+  return config.lookup(path);
+}
+
+auto lookupValueU64FromConfig(const Config &config, const char *path,
+                              uint64_t &value) -> bool {
+  unsigned long long tmp;
+  if (config.lookupValue(path, tmp)) {
+    value = tmp;
+    return true;
+  }
+  return false;
+}
+
+auto lookupValueI64FromConfig(const Config &config, const char *path,
+                              int64_t &value) -> bool {
   long long tmp;
   if (config.lookupValue(path, tmp)) {
     value = tmp;
