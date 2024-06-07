@@ -324,4 +324,17 @@ mod tests {
         assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
         assert!(cfg.get_root().exists("outer"));
     }
+
+    #[test]
+    fn ok_on_underlying_setting_exists_from_setting() {
+        let mut cfg = Config::new();
+        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        if let Ok(setting) = cfg.get_root().lookup("outer")
+        {
+            assert!(setting.exists("inner"));
+        }
+        else {
+            assert!(false);
+        }
+    }
 }

@@ -24,9 +24,10 @@ pub mod ffi {
             value: Pin<&mut CxxString>,
         ) -> bool;
 
+        // Cannot use "[unsigned] long long" directly for now
         unsafe fn lookupValueI64FromSetting(config: &Setting, path: *const c_char, value: &mut i64) -> bool;
         unsafe fn lookupValueU64FromSetting(config: &Setting, path: *const c_char, value: &mut u64) -> bool;
-
+        // Cannot use as member function due to lifetime
         unsafe fn lookupSettingFromSetting<'c>(cfg: Pin<&'c mut Setting>, path: *const c_char) -> Result<Pin<&'c mut Setting>>;
 
         type Config;
@@ -53,10 +54,10 @@ pub mod ffi {
             value: Pin<&mut CxxString>,
         ) -> bool;
 
-        // Can't use "[unsigned] long long" directly for now
+        // Cannot use "[unsigned] long long" directly for now
         unsafe fn lookupValueI64FromConfig(config: &Config, path: *const c_char, value: &mut i64) -> bool;
         unsafe fn lookupValueU64FromConfig(config: &Config, path: *const c_char, value: &mut u64) -> bool;
-
+        // Cannot use as member function due to lifetime
         unsafe fn getRootFromConfig<'c>(config: &'c Config) -> Pin<&'c mut Setting>;
         unsafe fn lookupSettingFromConfig<'c>(cfg: Pin<&'c mut Config>, path: *const c_char) -> Result<Pin<&'c mut Setting>>;
     }
