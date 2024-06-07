@@ -14,15 +14,20 @@ pub struct Setting<'a> {
     inner: Pin<&'a mut libconfig_sys::ffi::Setting>,
 }
 
-impl <'a> Setting<'a> {
+impl<'a> Setting<'a> {
     pub fn lookup(&'a mut self, path: &str) -> Result<Setting<'a>, LibconfigError> {
         let s = CString::new(path).expect("invalid file");
         unsafe {
             match libconfig_sys::ffi::lookupSetting(self.inner.as_mut(), s.as_ptr()) {
-                Ok(res) => Ok(Setting {inner: res }),
-                Err(_) => Err(LibconfigError::Invalid)
+                Ok(setting) => Ok(Setting { inner: setting }),
+                Err(_) => Err(LibconfigError::Invalid),
             }
         }
+    }
+
+    pub fn exists(&'a self, path: &str) -> bool {
+        let s = CString::new(path).expect("invalid file");
+        unsafe { self.inner.as_ref().exists(s.as_ptr()) }
     }
 }
 
@@ -51,6 +56,11 @@ impl Config {
         Setting {
             inner: unsafe { libconfig_sys::ffi::getRootFromConfig(self.inner.as_ref().unwrap()) },
         }
+    }
+
+    pub fn exists(&self, path: &str) -> bool {
+        let s = CString::new(path).expect("invalid file");
+        unsafe { self.inner.as_ref().unwrap().exists(s.as_ptr()) }
     }
 
     pub fn lookup_bool(&mut self, path: &str) -> Option<bool> {
@@ -191,9 +201,23 @@ mod tests {
     }
 
     #[test]
-    fn ok_on_lookup_root() {
+    fn ok_on_lookup_setting() {
         let mut cfg = Config::new();
         assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
         assert!(cfg.get_root().lookup("outer").is_ok());
+    }
+
+    #[test]
+    fn ok_on_setting_exists_from_config() {
+        let mut cfg = Config::new();
+        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert!(cfg.exists("outer"));
+    }
+
+    #[test]
+    fn ok_on_setting_exists_from_setting() {
+        let mut cfg = Config::new();
+        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert!(cfg.get_root().exists("outer"));
     }
 }
