@@ -11,7 +11,7 @@ Rust wrapper of	the C++ [libconfig](https://github.com/hyperrealm/libconfig) lib
 - [x] readFile
 - [ ] writeFile
 - [ ] readString
-- [ ] setIncludeDir
+- [x] setIncludeDir
 - [ ] getIncludeDir
 - [ ] getOptions
 - [ ] setOptions

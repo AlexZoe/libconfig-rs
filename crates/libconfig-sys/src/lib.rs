@@ -36,6 +36,7 @@ pub mod ffi {
         fn Config_ctor() -> UniquePtr<Config>;
 
         unsafe fn readFile(self: Pin<&mut Config>, filename: *const c_char) -> Result<()>;
+        unsafe fn setIncludeDir(self: Pin<&mut Config>, path: *const c_char);
         unsafe fn exists(self: &Config, path: *const c_char) -> bool;
         #[rust_name = "lookup_bool"]
         unsafe fn lookupValue(self: &Config, path: *const c_char, value: &mut bool) -> bool;

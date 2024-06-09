@@ -118,6 +118,13 @@ impl Config {
         }
     }
 
+    pub fn set_include_path(&mut self, path: &str) {
+        let s = CString::new(path).expect("invalid file");
+        unsafe {
+            self.inner.pin_mut().setIncludeDir(s.as_ptr());
+        }
+    }
+
     pub fn get_root<'a>(&'a self) -> Setting<'a> {
         Setting {
             inner: unsafe { libconfig_sys::ffi::getRootFromConfig(self.inner.as_ref().unwrap()) },
@@ -257,6 +264,23 @@ mod tests {
     }
 
     #[test]
+    fn ok_on_valid_include_dir() {
+        let mut cfg = Config::new();
+        cfg.set_include_path("../input");
+        assert_eq!(cfg.from_file("../input/test_with_include.cfg"), Ok(()));
+    }
+
+    #[test]
+    fn error_on_valid_include_dir() {
+        let mut cfg = Config::new();
+        cfg.set_include_path("../");
+        assert_eq!(
+            cfg.from_file("../input/test_with_include.cfg"),
+            Err(LibconfigError::Invalid)
+        );
+    }
+
+    #[test]
     fn ok_on_valid_file() {
         let mut cfg = Config::new();
         assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
@@ -329,11 +353,9 @@ mod tests {
     fn ok_on_underlying_setting_exists_from_setting() {
         let mut cfg = Config::new();
         assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
-        if let Ok(setting) = cfg.get_root().lookup("outer")
-        {
+        if let Ok(setting) = cfg.get_root().lookup("outer") {
             assert!(setting.exists("inner"));
-        }
-        else {
+        } else {
             assert!(false);
         }
     }
