@@ -28,6 +28,8 @@ static void trycatch(Try &&func, Fail &&fail) noexcept try {
 }  // namespace behavior
 }  // namespace rust
 
+typedef libconfig::Setting::Type LibType;
+
 namespace libconfig {
 
 auto lookupSettingFromSetting(Setting &setting, const char *path) -> Setting & {

@@ -1,8 +1,24 @@
 #[cxx::bridge]
 pub mod ffi {
 
+    #[derive(Debug)]
+    #[repr(u32)]
+    enum LibType {
+        TypeNone,
+        TypeInt,
+        TypeInt64,
+        TypeFloat,
+        TypeString,
+        TypeBoolean,
+        TypeGroup,
+        TypeArray,
+        TypeList,
+    }
+
     unsafe extern "C++" {
         include!("libconfig-sys/include/wrapper.h");
+
+        type LibType;
 
         type Setting;
 
@@ -25,6 +41,7 @@ pub mod ffi {
         ) -> bool;
         unsafe fn getName(self: &Setting) -> *const c_char;
         unsafe fn isRoot(self: &Setting) -> bool;
+        unsafe fn getType(self: &Setting) -> LibType;
 
         // Cannot use "[unsigned] long long" directly for now
         unsafe fn lookupValueI64FromSetting(

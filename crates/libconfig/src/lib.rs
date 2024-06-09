@@ -7,6 +7,8 @@ use std::ffi::{CStr, CString};
 use std::pin::Pin;
 use thiserror::Error;
 
+pub use libconfig_sys::ffi::LibType;
+
 #[derive(Error, Debug, PartialEq)]
 pub enum LibconfigError {
     #[error("invalid file")]
@@ -127,6 +129,10 @@ impl<'a> Setting<'a> {
 
     pub fn is_root(&self) -> bool {
         unsafe { self.inner.as_ref().isRoot() }
+    }
+
+    pub fn get_type(&self) -> LibType {
+        unsafe { self.inner.getType() }
     }
 }
 
@@ -445,6 +451,28 @@ mod tests {
         assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
         if let Ok(setting) = cfg.get_root().lookup("outer").unwrap().lookup("inner") {
             assert!(!setting.is_root());
+        } else {
+            assert!(false);
+        }
+    }
+
+    #[test]
+    fn ok_on_setting_get_type_int() {
+        let mut cfg = Config::new();
+        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        if let Ok(setting) = cfg.get_root().lookup("outer").unwrap().lookup("inner") {
+            assert_eq!(setting.get_type(), LibType::TypeInt);
+        } else {
+            assert!(false);
+        }
+    }
+
+    #[test]
+    fn ok_on_setting_get_type_x() {
+        let mut cfg = Config::new();
+        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        if let Ok(setting) = cfg.get_root().lookup("outer") {
+            assert_eq!(setting.get_type(), LibType::TypeGroup);
         } else {
             assert!(false);
         }
