@@ -42,6 +42,14 @@ pub mod ffi {
         unsafe fn getName(self: &Setting) -> *const c_char;
         unsafe fn isRoot(self: &Setting) -> bool;
         unsafe fn getType(self: &Setting) -> LibType;
+        unsafe fn getLength(self: &Setting) -> Result<i32>;
+        unsafe fn isGroup(self: &Setting) -> bool;
+        unsafe fn isArray(self: &Setting) -> bool;
+        unsafe fn isList(self: &Setting) -> bool;
+        unsafe fn isAggregate(self: &Setting) -> bool;
+        unsafe fn isScalar(self: &Setting) -> bool;
+        unsafe fn isNumber(self: &Setting) -> bool;
+        unsafe fn isString(self: &Setting) -> bool;
 
         // Cannot use "[unsigned] long long" directly for now
         unsafe fn lookupValueI64FromSetting(

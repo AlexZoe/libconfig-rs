@@ -134,6 +134,43 @@ impl<'a> Setting<'a> {
     pub fn get_type(&self) -> LibType {
         unsafe { self.inner.getType() }
     }
+
+    pub fn get_length(&self) -> Result<i32, LibconfigError> {
+        unsafe {
+            match self.inner.getLength() {
+                Ok(length) => Ok(length),
+                _ => Err(LibconfigError::Invalid),
+            }
+        }
+    }
+
+    pub fn is_group(&self) -> bool {
+        unsafe { self.inner.isGroup() }
+    }
+
+    pub fn is_array(&self) -> bool {
+        unsafe { self.inner.isArray() }
+    }
+
+    pub fn is_list(&self) -> bool {
+        unsafe { self.inner.isList() }
+    }
+
+    pub fn is_aggregate(&self) -> bool {
+        unsafe { self.inner.isAggregate() }
+    }
+
+    pub fn is_scalar(&self) -> bool {
+        unsafe { self.inner.isScalar() }
+    }
+
+    pub fn is_number(&self) -> bool {
+        unsafe { self.inner.isNumber() }
+    }
+
+    pub fn is_string(&self) -> bool {
+        unsafe { self.inner.isString() }
+    }
 }
 
 pub struct Config {
