@@ -58,6 +58,10 @@ auto getPathFromSetting(const Setting &setting, std::string &path) -> void {
   path = setting.getPath();
 }
 
+auto getParentFromSetting(Setting &setting) -> Setting & {
+  return setting.getParent();
+}
+
 auto getRootFromConfig(const Config &config) -> Setting & {
   return config.getRoot();
 }

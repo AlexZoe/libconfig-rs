@@ -38,10 +38,13 @@ pub mod ffi {
         ) -> bool;
         // Cannot use as member function due to lifetime
         unsafe fn lookupSettingFromSetting<'c>(
-            cfg: Pin<&'c mut Setting>,
+            setting: Pin<&'c mut Setting>,
             path: *const c_char,
         ) -> Result<Pin<&'c mut Setting>>;
         unsafe fn getPathFromSetting(setting: &Setting, path: Pin<&mut CxxString>);
+        unsafe fn getParentFromSetting<'c>(
+            setting: Pin<&'c mut Setting>,
+        ) -> Result<Pin<&'c mut Setting>>;
 
         type Config;
 

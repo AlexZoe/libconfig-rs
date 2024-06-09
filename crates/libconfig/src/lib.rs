@@ -1,5 +1,8 @@
 use cxx::{let_cxx_string, UniquePtr};
-use libconfig_sys::ffi::{getPathFromSetting, lookupValueI64FromConfig, lookupValueI64FromSetting};
+use libconfig_sys::ffi::{
+    getParentFromSetting, getPathFromSetting, getRootFromConfig, lookupSettingFromConfig,
+    lookupSettingFromSetting, lookupValueI64FromConfig, lookupValueI64FromSetting, Config_ctor,
+};
 use std::ffi::{CStr, CString};
 use std::pin::Pin;
 use thiserror::Error;
@@ -18,7 +21,7 @@ impl<'a> Setting<'a> {
     pub fn lookup(&'a mut self, path: &str) -> Result<Setting<'a>, LibconfigError> {
         let s = CString::new(path).expect("invalid file");
         unsafe {
-            match libconfig_sys::ffi::lookupSettingFromSetting(self.inner.as_mut(), s.as_ptr()) {
+            match lookupSettingFromSetting(self.inner.as_mut(), s.as_ptr()) {
                 Ok(setting) => Ok(Setting { inner: setting }),
                 Err(_) => Err(LibconfigError::Invalid),
             }
@@ -112,6 +115,15 @@ impl<'a> Setting<'a> {
             tmp.to_string()
         }
     }
+
+    pub fn get_parent(&'a mut self) -> Result<Setting<'a>, LibconfigError> {
+        unsafe {
+            match getParentFromSetting(self.inner.as_mut()) {
+                Ok(setting) => Ok(Setting { inner: setting }),
+                Err(_) => Err(LibconfigError::Invalid),
+            }
+        }
+    }
 }
 
 pub struct Config {
@@ -121,7 +133,7 @@ pub struct Config {
 impl Config {
     pub fn new() -> Self {
         Self {
-            inner: libconfig_sys::ffi::Config_ctor(),
+            inner: Config_ctor(),
         }
     }
 
@@ -144,17 +156,14 @@ impl Config {
 
     pub fn get_root<'a>(&'a self) -> Setting<'a> {
         Setting {
-            inner: unsafe { libconfig_sys::ffi::getRootFromConfig(self.inner.as_ref().unwrap()) },
+            inner: unsafe { getRootFromConfig(self.inner.as_ref().unwrap()) },
         }
     }
 
     pub fn lookup<'a>(&'a mut self, path: &str) -> Result<Setting<'a>, LibconfigError> {
         let s = CString::new(path).expect("invalid file");
         unsafe {
-            match libconfig_sys::ffi::lookupSettingFromConfig(
-                self.inner.as_mut().unwrap(),
-                s.as_ptr(),
-            ) {
+            match lookupSettingFromConfig(self.inner.as_mut().unwrap(), s.as_ptr()) {
                 Ok(setting) => Ok(Setting { inner: setting }),
                 Err(_) => Err(LibconfigError::Invalid),
             }
@@ -402,6 +411,17 @@ mod tests {
         assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
         if let Ok(setting) = cfg.get_root().lookup("outer").unwrap().lookup("inner") {
             assert_eq!(setting.get_path(), "outer.inner");
+        } else {
+            assert!(false);
+        }
+    }
+
+    #[test]
+    fn ok_on_setting_get_parent() {
+        let mut cfg = Config::new();
+        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        if let Ok(mut setting) = cfg.get_root().lookup("outer").unwrap().lookup("inner") {
+            assert_eq!(setting.get_parent().unwrap().get_name(), Some("outer"));
         } else {
             assert!(false);
         }

@@ -47,7 +47,7 @@ Rust wrapper of	the C++ [libconfig](https://github.com/hyperrealm/libconfig) lib
 - [ ] remove(index)
 - [x] getName
 - [x] getPath
-- [ ] getParent
+- [x] getParent
 - [ ] isRoot
 - [ ] getIndex
 - [ ] getType
