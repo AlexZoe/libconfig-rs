@@ -1,6 +1,6 @@
 use cxx::{let_cxx_string, UniquePtr};
 use libconfig_sys::ffi::{lookupValueI64FromConfig, lookupValueI64FromSetting};
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::pin::Pin;
 use thiserror::Error;
 
@@ -92,6 +92,15 @@ impl<'a> Setting<'a> {
             match self.inner.as_ref().lookup_string(s.as_ptr(), tmp.as_mut()) {
                 true => Some(tmp.to_string()),
                 false => None,
+            }
+        }
+    }
+
+    pub fn get_name(&'a self) -> Option<&'a str> {
+        unsafe {
+            match self.inner.as_ref().getName() {
+                s if !s.is_null() => Some(CStr::from_ptr(s).to_str().unwrap()),
+                _ => None,
             }
         }
     }
@@ -358,5 +367,24 @@ mod tests {
         } else {
             assert!(false);
         }
+    }
+
+    #[test]
+    fn ok_on_setting_name() {
+        let mut cfg = Config::new();
+        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        if let Ok(setting) = cfg.get_root().lookup("outer") {
+            assert_eq!(setting.get_name(), Some("outer"));
+        } else {
+            assert!(false);
+        }
+    }
+
+    #[test]
+    fn err_on_setting_without_name() {
+        let mut cfg = Config::new();
+        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        let setting = cfg.get_root();
+        assert!(setting.get_name().is_none());
     }
 }

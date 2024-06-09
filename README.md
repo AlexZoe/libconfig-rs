@@ -45,10 +45,10 @@ Rust wrapper of	the C++ [libconfig](https://github.com/hyperrealm/libconfig) lib
 - [ ] add
 - [ ] remove
 - [ ] remove(index)
-- [ ] getName
+- [x] getName
 - [ ] getPath
 - [ ] getParent
-- [ ] isRooot
+- [ ] isRoot
 - [ ] getIndex
 - [ ] getType
 - [ ] getFormat
