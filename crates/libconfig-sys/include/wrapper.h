@@ -44,14 +44,18 @@ auto lookupValueU64FromSetting(const Setting &config, const char *path,
   return false;
 }
 
-auto lookupValueI64FromSetting(const Setting &config, const char *path,
+auto lookupValueI64FromSetting(const Setting &setting, const char *path,
                                int64_t &value) -> bool {
   long long tmp;
-  if (config.lookupValue(path, tmp)) {
+  if (setting.lookupValue(path, tmp)) {
     value = tmp;
     return true;
   }
   return false;
+}
+
+auto getPathFromSetting(const Setting &setting, std::string &path) -> void {
+  path = setting.getPath();
 }
 
 auto getRootFromConfig(const Config &config) -> Setting & {

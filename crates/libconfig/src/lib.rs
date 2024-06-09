@@ -1,5 +1,5 @@
 use cxx::{let_cxx_string, UniquePtr};
-use libconfig_sys::ffi::{lookupValueI64FromConfig, lookupValueI64FromSetting};
+use libconfig_sys::ffi::{getPathFromSetting, lookupValueI64FromConfig, lookupValueI64FromSetting};
 use std::ffi::{CStr, CString};
 use std::pin::Pin;
 use thiserror::Error;
@@ -102,6 +102,14 @@ impl<'a> Setting<'a> {
                 s if !s.is_null() => Some(CStr::from_ptr(s).to_str().unwrap()),
                 _ => None,
             }
+        }
+    }
+
+    pub fn get_path(&self) -> String {
+        let_cxx_string!(tmp = "");
+        unsafe {
+            getPathFromSetting(&self.inner, tmp.as_mut());
+            tmp.to_string()
         }
     }
 }
@@ -386,5 +394,16 @@ mod tests {
         assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
         let setting = cfg.get_root();
         assert!(setting.get_name().is_none());
+    }
+
+    #[test]
+    fn ok_on_setting_path() {
+        let mut cfg = Config::new();
+        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        if let Ok(setting) = cfg.get_root().lookup("outer").unwrap().lookup("inner") {
+            assert_eq!(setting.get_path(), "outer.inner");
+        } else {
+            assert!(false);
+        }
     }
 }
