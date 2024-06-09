@@ -124,6 +124,10 @@ impl<'a> Setting<'a> {
             }
         }
     }
+
+    pub fn is_root(&self) -> bool {
+        unsafe { self.inner.as_ref().isRoot() }
+    }
 }
 
 pub struct Config {
@@ -422,6 +426,25 @@ mod tests {
         assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
         if let Ok(mut setting) = cfg.get_root().lookup("outer").unwrap().lookup("inner") {
             assert_eq!(setting.get_parent().unwrap().get_name(), Some("outer"));
+        } else {
+            assert!(false);
+        }
+    }
+
+    #[test]
+    fn ok_on_setting_is_root() {
+        let mut cfg = Config::new();
+        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        let setting = cfg.get_root();
+        assert!(setting.is_root());
+    }
+
+    #[test]
+    fn err_on_setting_is_not_root() {
+        let mut cfg = Config::new();
+        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        if let Ok(setting) = cfg.get_root().lookup("outer").unwrap().lookup("inner") {
+            assert!(!setting.is_root());
         } else {
             assert!(false);
         }

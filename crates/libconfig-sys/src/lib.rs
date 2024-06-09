@@ -24,6 +24,7 @@ pub mod ffi {
             value: Pin<&mut CxxString>,
         ) -> bool;
         unsafe fn getName(self: &Setting) -> *const c_char;
+        unsafe fn isRoot(self: &Setting) -> bool;
 
         // Cannot use "[unsigned] long long" directly for now
         unsafe fn lookupValueI64FromSetting(
