@@ -56,12 +56,30 @@ auto lookupValueI64FromSetting(const Setting &setting, const char *path,
   return false;
 }
 
+auto tryBoolFromSetting(const Setting &setting) -> bool { return setting; }
+auto tryI32FromSetting(const Setting &setting) -> int32_t { return setting; }
+auto tryI64FromSetting(const Setting &setting) -> int64_t { return setting; }
+auto tryF32FromSetting(const Setting &setting) -> float { return setting; }
+auto tryF64FromSetting(const Setting &setting) -> double { return setting; }
+auto tryStringFromSetting(const Setting &setting)
+    -> std::unique_ptr<std::string> {
+  return std::make_unique<std::string>(static_cast<const char*>(setting));
+}
+
 auto getPathFromSetting(const Setting &setting, std::string &path) -> void {
   path = setting.getPath();
 }
 
 auto getParentFromSetting(Setting &setting) -> Setting & {
   return setting.getParent();
+}
+
+auto getSettingIter(Setting &setting) -> std::unique_ptr<SettingIterator> {
+  return std::make_unique<SettingIterator>(setting.begin());
+}
+
+auto getNextFromIter(std::unique_ptr<SettingIterator> &iter) -> Setting & {
+  return (*(*iter)++);
 }
 
 auto getRootFromConfig(const Config &config) -> Setting & {

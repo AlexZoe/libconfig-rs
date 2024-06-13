@@ -21,6 +21,7 @@ pub mod ffi {
         type LibType;
 
         type Setting;
+        type SettingIterator;
 
         unsafe fn exists(self: &Setting, path: *const c_char) -> bool;
         #[rust_name = "lookup_bool"]
@@ -62,6 +63,12 @@ pub mod ffi {
             path: *const c_char,
             value: &mut u64,
         ) -> bool;
+        unsafe fn tryBoolFromSetting(setting: &Setting) -> Result<bool>;
+        unsafe fn tryI32FromSetting(setting: &Setting) -> Result<i32>;
+        unsafe fn tryI64FromSetting(setting: &Setting) -> Result<i64>;
+        unsafe fn tryF32FromSetting(setting: &Setting) -> Result<f32>;
+        unsafe fn tryF64FromSetting(setting: &Setting) -> Result<f64>;
+        unsafe fn tryStringFromSetting(setting: &Setting) -> Result<UniquePtr<CxxString>>;
         // Cannot use as member function due to lifetime
         unsafe fn lookupSettingFromSetting<'c>(
             setting: Pin<&'c mut Setting>,
@@ -71,6 +78,12 @@ pub mod ffi {
         unsafe fn getParentFromSetting<'c>(
             setting: Pin<&'c mut Setting>,
         ) -> Result<Pin<&'c mut Setting>>;
+        unsafe fn getSettingIter<'c>(
+            setting: Pin<&'c mut Setting>,
+        ) -> Result<UniquePtr<SettingIterator>>;
+        unsafe fn getNextFromIter<'c>(
+            iter: &mut UniquePtr<SettingIterator>,
+        ) -> Pin<&'c mut Setting>;
 
         type Config;
 

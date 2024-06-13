@@ -3,7 +3,9 @@ use libconfig_sys::ffi::{
     getParentFromSetting, getPathFromSetting, getRootFromConfig, lookupSettingFromConfig,
     lookupSettingFromSetting, lookupValueI64FromConfig, lookupValueI64FromSetting, Config_ctor,
 };
+use std::borrow::BorrowMut;
 use std::ffi::{CStr, CString};
+use std::marker::PhantomData;
 use std::pin::Pin;
 use thiserror::Error;
 
@@ -17,6 +19,13 @@ pub enum LibconfigError {
 
 pub struct Setting<'a> {
     inner: Pin<&'a mut libconfig_sys::ffi::Setting>,
+}
+
+pub struct SettingIter<'a> {
+    inner: Option<UniquePtr<libconfig_sys::ffi::SettingIterator>>,
+    items: usize,
+    count: usize,
+    _lifetime: PhantomData<&'a ()>,
 }
 
 impl<'a> Setting<'a> {
@@ -170,6 +179,121 @@ impl<'a> Setting<'a> {
 
     pub fn is_string(&self) -> bool {
         unsafe { self.inner.isString() }
+    }
+}
+
+impl<'a> TryInto<bool> for Setting<'a> {
+    type Error = LibconfigError;
+    fn try_into(self) -> Result<bool, Self::Error> {
+        unsafe {
+            match libconfig_sys::ffi::tryBoolFromSetting(&self.inner) {
+                Err(_) => Err(LibconfigError::Invalid),
+                Ok(val) => Ok(val),
+            }
+        }
+    }
+}
+
+impl<'a> TryInto<i32> for Setting<'a> {
+    type Error = LibconfigError;
+    fn try_into(self) -> Result<i32, Self::Error> {
+        unsafe {
+            match libconfig_sys::ffi::tryI32FromSetting(&self.inner) {
+                Err(_) => Err(LibconfigError::Invalid),
+                Ok(val) => Ok(val),
+            }
+        }
+    }
+}
+
+impl<'a> TryInto<i64> for Setting<'a> {
+    type Error = LibconfigError;
+    fn try_into(self) -> Result<i64, Self::Error> {
+        unsafe {
+            match libconfig_sys::ffi::tryI64FromSetting(&self.inner) {
+                Err(_) => Err(LibconfigError::Invalid),
+                Ok(val) => Ok(val),
+            }
+        }
+    }
+}
+
+impl<'a> TryInto<f32> for Setting<'a> {
+    type Error = LibconfigError;
+    fn try_into(self) -> Result<f32, Self::Error> {
+        unsafe {
+            match libconfig_sys::ffi::tryF32FromSetting(&self.inner) {
+                Err(_) => Err(LibconfigError::Invalid),
+                Ok(val) => Ok(val),
+            }
+        }
+    }
+}
+
+impl<'a> TryInto<f64> for Setting<'a> {
+    type Error = LibconfigError;
+    fn try_into(self) -> Result<f64, Self::Error> {
+        unsafe {
+            match libconfig_sys::ffi::tryF64FromSetting(&self.inner) {
+                Err(_) => Err(LibconfigError::Invalid),
+                Ok(val) => Ok(val),
+            }
+        }
+    }
+}
+
+impl<'a> TryInto<String> for Setting<'a> {
+    type Error = LibconfigError;
+    fn try_into(self) -> Result<String, Self::Error> {
+        unsafe {
+            match libconfig_sys::ffi::tryStringFromSetting(&self.inner) {
+                Err(_) => Err(LibconfigError::Invalid),
+                Ok(val) => Ok(String::from(&*val.to_string())),
+            }
+        }
+    }
+}
+
+impl<'a> Iterator for SettingIter<'a> {
+    type Item = Setting<'a>;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.count >= self.items {
+            None
+        } else {
+            self.count += 1;
+            unsafe {
+                Some(Setting {
+                    inner: libconfig_sys::ffi::getNextFromIter(
+                        self.inner.as_mut().unwrap().borrow_mut(),
+                    ),
+                })
+            }
+        }
+    }
+}
+
+impl<'a> IntoIterator for Setting<'a> {
+    type Item = Setting<'a>;
+    type IntoIter = SettingIter<'a>;
+
+    fn into_iter(mut self) -> Self::IntoIter {
+        unsafe {
+            if let Ok(iter) = libconfig_sys::ffi::getSettingIter(self.inner.as_mut()) {
+                Self::IntoIter {
+                    inner: Some(iter),
+                    count: 0,
+                    items: self.inner.as_mut().getLength().unwrap_or(0) as usize,
+                    _lifetime: PhantomData,
+                }
+            } else {
+                Self::IntoIter {
+                    inner: None,
+                    count: 0,
+                    items: 0,
+                    _lifetime: PhantomData,
+                }
+            }
+        }
     }
 }
 
@@ -510,6 +634,48 @@ mod tests {
         assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
         if let Ok(setting) = cfg.get_root().lookup("outer") {
             assert_eq!(setting.get_type(), LibType::TypeGroup);
+        } else {
+            assert!(false);
+        }
+    }
+
+    #[test]
+    fn none_for_non_aggregate() {
+        let mut cfg = Config::new();
+        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        if let Ok(setting) = cfg.get_root().lookup("val_int") {
+            assert_eq!(setting.get_type(), LibType::TypeInt);
+            let mut iter = setting.into_iter();
+            assert!(iter.next().is_none());
+        } else {
+            assert!(false);
+        }
+    }
+
+    #[test]
+    fn some_for_aggregate() {
+        let mut cfg = Config::new();
+        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        if let Ok(setting) = cfg.get_root().lookup("arr") {
+            assert_eq!(setting.get_type(), LibType::TypeArray);
+            let mut iter = setting.into_iter();
+            assert_eq!(iter.next().unwrap().try_into(), Ok(3));
+        } else {
+            assert!(false);
+        }
+    }
+
+    #[test]
+    fn iter_returns_none_after_last_item() {
+        let mut cfg = Config::new();
+        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        if let Ok(setting) = cfg.get_root().lookup("arr") {
+            assert_eq!(setting.get_type(), LibType::TypeArray);
+            let mut iter = setting.into_iter();
+            assert_eq!(iter.next().unwrap().try_into(), Ok(3));
+            assert_eq!(iter.next().unwrap().try_into(), Ok(5));
+            assert_eq!(iter.next().unwrap().try_into(), Ok(8));
+            assert!(iter.next().is_none());
         } else {
             assert!(false);
         }
