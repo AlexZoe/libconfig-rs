@@ -42,6 +42,7 @@ pub mod ffi {
         ) -> bool;
         unsafe fn getName(self: &Setting) -> *const c_char;
         unsafe fn isRoot(self: &Setting) -> bool;
+        unsafe fn getIndex(self: &Setting) -> i32;
         unsafe fn getType(self: &Setting) -> LibType;
         unsafe fn getLength(self: &Setting) -> Result<i32>;
         unsafe fn isGroup(self: &Setting) -> bool;

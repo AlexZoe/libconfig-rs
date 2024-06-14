@@ -140,6 +140,15 @@ impl<'a> Setting<'a> {
         unsafe { self.inner.as_ref().isRoot() }
     }
 
+    pub fn get_index(&self) -> Option<usize> {
+        unsafe {
+            match self.inner.getIndex() {
+                -1 => None,
+                i => Some(i as usize),
+            }
+        }
+    }
+
     pub fn get_type(&self) -> LibType {
         unsafe { self.inner.getType() }
     }
