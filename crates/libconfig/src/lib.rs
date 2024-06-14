@@ -317,10 +317,30 @@ impl Config {
         }
     }
 
-    pub fn from_file(&mut self, path: &str) -> Result<(), LibconfigError> {
+    pub fn read_file(&mut self, path: &str) -> Result<(), LibconfigError> {
         let s = CString::new(path).expect("invalid file");
         unsafe {
             match self.inner.pin_mut().readFile(s.as_ptr()) {
+                Ok(_) => Ok(()),
+                Err(_) => Err(LibconfigError::Invalid),
+            }
+        }
+    }
+
+    pub fn write_file(&mut self, path: &str) -> Result<(), LibconfigError> {
+        let_cxx_string!(s = path);
+        unsafe {
+            match self.inner.pin_mut().writeFile(&s) {
+                Ok(_) => Ok(()),
+                Err(_) => Err(LibconfigError::Invalid),
+            }
+        }
+    }
+
+    pub fn read_str(&mut self, path: &str) -> Result<(), LibconfigError> {
+        let_cxx_string!(s = path);
+        unsafe {
+            match self.inner.pin_mut().readString(&s) {
                 Ok(_) => Ok(()),
                 Err(_) => Err(LibconfigError::Invalid),
             }
@@ -455,7 +475,7 @@ mod tests {
     fn error_on_non_existing_file() {
         let mut cfg = Config::new();
         assert_eq!(
-            cfg.from_file("non_existing.cfg"),
+            cfg.read_file("non_existing.cfg"),
             Err(LibconfigError::Invalid)
         );
     }
@@ -464,7 +484,7 @@ mod tests {
     fn error_on_invalid_file() {
         let mut cfg = Config::new();
         assert_eq!(
-            cfg.from_file("../input/invalid.cfg"),
+            cfg.read_file("../input/invalid.cfg"),
             Err(LibconfigError::Invalid)
         );
     }
@@ -473,7 +493,7 @@ mod tests {
     fn ok_on_valid_include_dir() {
         let mut cfg = Config::new();
         cfg.set_include_path("../input");
-        assert_eq!(cfg.from_file("../input/test_with_include.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test_with_include.cfg"), Ok(()));
     }
 
     #[test]
@@ -481,7 +501,7 @@ mod tests {
         let mut cfg = Config::new();
         cfg.set_include_path("../");
         assert_eq!(
-            cfg.from_file("../input/test_with_include.cfg"),
+            cfg.read_file("../input/test_with_include.cfg"),
             Err(LibconfigError::Invalid)
         );
     }
@@ -489,76 +509,76 @@ mod tests {
     #[test]
     fn ok_on_valid_file() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
     }
 
     #[test]
     fn ok_on_valid_i32_setting() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         assert_eq!(cfg.lookup_i32("val_int"), Some(42));
     }
 
     #[test]
     fn ok_on_nested_valid_i32_setting() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         assert_eq!(cfg.lookup_i32("outer.inner"), Some(3));
     }
 
     #[test]
     fn ok_on_valid_i64_setting() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         assert_eq!(cfg.lookup_i64("val_u64"), Some(0xFFFFFFFFFF));
     }
 
     #[test]
     fn ok_on_nested_valid_f32_setting() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         assert_eq!(cfg.lookup_f32("some_f32"), Some(0.48));
     }
 
     #[test]
     fn ok_on_nested_valid_f64_setting() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         assert_eq!(cfg.lookup_f64("some_f64"), Some(1e10));
     }
 
     #[test]
     fn ok_on_valid_string_setting() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         assert_eq!(cfg.lookup_string("name"), Some(String::from("Some Name")));
     }
 
     #[test]
     fn ok_on_setting_exists_from_config() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         assert!(cfg.exists("outer"));
     }
 
     #[test]
     fn ok_on_lookup_setting() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         assert!(cfg.get_root().lookup("outer").is_ok());
     }
 
     #[test]
     fn ok_on_setting_exists_from_setting() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         assert!(cfg.get_root().exists("outer"));
     }
 
     #[test]
     fn ok_on_underlying_setting_exists_from_setting() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         if let Ok(setting) = cfg.get_root().lookup("outer") {
             assert!(setting.exists("inner"));
         } else {
@@ -569,7 +589,7 @@ mod tests {
     #[test]
     fn ok_on_setting_name() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         if let Ok(setting) = cfg.get_root().lookup("outer") {
             assert_eq!(setting.get_name(), Some("outer"));
         } else {
@@ -580,7 +600,7 @@ mod tests {
     #[test]
     fn err_on_setting_without_name() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         let setting = cfg.get_root();
         assert!(setting.get_name().is_none());
     }
@@ -588,7 +608,7 @@ mod tests {
     #[test]
     fn ok_on_setting_path() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         if let Ok(setting) = cfg.get_root().lookup("outer").unwrap().lookup("inner") {
             assert_eq!(setting.get_path(), "outer.inner");
         } else {
@@ -599,7 +619,7 @@ mod tests {
     #[test]
     fn ok_on_setting_get_parent() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         if let Ok(mut setting) = cfg.get_root().lookup("outer").unwrap().lookup("inner") {
             assert_eq!(setting.get_parent().unwrap().get_name(), Some("outer"));
         } else {
@@ -610,7 +630,7 @@ mod tests {
     #[test]
     fn ok_on_setting_is_root() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         let setting = cfg.get_root();
         assert!(setting.is_root());
     }
@@ -618,7 +638,7 @@ mod tests {
     #[test]
     fn err_on_setting_is_not_root() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         if let Ok(setting) = cfg.get_root().lookup("outer").unwrap().lookup("inner") {
             assert!(!setting.is_root());
         } else {
@@ -629,7 +649,7 @@ mod tests {
     #[test]
     fn ok_on_setting_get_type_int() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         if let Ok(setting) = cfg.get_root().lookup("outer").unwrap().lookup("inner") {
             assert_eq!(setting.get_type(), LibType::TypeInt);
         } else {
@@ -640,7 +660,7 @@ mod tests {
     #[test]
     fn ok_on_setting_get_type_x() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         if let Ok(setting) = cfg.get_root().lookup("outer") {
             assert_eq!(setting.get_type(), LibType::TypeGroup);
         } else {
@@ -651,7 +671,7 @@ mod tests {
     #[test]
     fn none_for_non_aggregate() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         if let Ok(setting) = cfg.get_root().lookup("val_int") {
             assert_eq!(setting.get_type(), LibType::TypeInt);
             let mut iter = setting.into_iter();
@@ -664,7 +684,7 @@ mod tests {
     #[test]
     fn some_for_aggregate() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         if let Ok(setting) = cfg.get_root().lookup("arr") {
             assert_eq!(setting.get_type(), LibType::TypeArray);
             let mut iter = setting.into_iter();
@@ -677,7 +697,7 @@ mod tests {
     #[test]
     fn iter_returns_none_after_last_item() {
         let mut cfg = Config::new();
-        assert_eq!(cfg.from_file("../input/test.cfg"), Ok(()));
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         if let Ok(setting) = cfg.get_root().lookup("arr") {
             assert_eq!(setting.get_type(), LibType::TypeArray);
             let mut iter = setting.into_iter();
