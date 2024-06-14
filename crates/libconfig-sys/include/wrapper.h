@@ -32,6 +32,13 @@ typedef libconfig::Setting::Type LibType;
 
 namespace libconfig {
 
+auto setBool(Setting &setting, bool val) { setting = val; }
+auto setI32(Setting &setting, int32_t val) { setting = val; }
+auto setI64(Setting &setting, int64_t val) { setting = val; }
+auto setF32(Setting &setting, float val) { setting = val; }
+auto setF64(Setting &setting, double val) { setting = val; }
+auto setString(Setting &setting, const std::string &val) { setting = val; }
+
 auto lookupSettingFromSetting(Setting &setting, const char *path) -> Setting & {
   return setting.lookup(path);
 }
@@ -56,6 +63,11 @@ auto lookupValueI64FromSetting(const Setting &setting, const char *path,
   return false;
 }
 
+auto addSetting(Setting &setting, const std::string &name, Setting::Type type)
+    -> Setting & {
+  return setting.add(name, type);
+}
+
 auto tryBoolFromSetting(const Setting &setting) -> bool { return setting; }
 auto tryI32FromSetting(const Setting &setting) -> int32_t { return setting; }
 auto tryI64FromSetting(const Setting &setting) -> int64_t { return setting; }
@@ -63,7 +75,7 @@ auto tryF32FromSetting(const Setting &setting) -> float { return setting; }
 auto tryF64FromSetting(const Setting &setting) -> double { return setting; }
 auto tryStringFromSetting(const Setting &setting)
     -> std::unique_ptr<std::string> {
-  return std::make_unique<std::string>(static_cast<const char*>(setting));
+  return std::make_unique<std::string>(static_cast<const char *>(setting));
 }
 
 auto getPathFromSetting(const Setting &setting, std::string &path) -> void {

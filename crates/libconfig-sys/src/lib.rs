@@ -53,6 +53,12 @@ pub mod ffi {
         unsafe fn isNumber(self: &Setting) -> bool;
         unsafe fn isString(self: &Setting) -> bool;
 
+        unsafe fn setBool<'c>(setting: Pin<&'c mut Setting>, val: bool) -> Result<()>;
+        unsafe fn setI32<'c>(setting: Pin<&'c mut Setting>, val: i32) -> Result<()>;
+        unsafe fn setI64<'c>(setting: Pin<&'c mut Setting>, val: i64) -> Result<()>;
+        unsafe fn setF32<'c>(setting: Pin<&'c mut Setting>, val: f32) -> Result<()>;
+        unsafe fn setF64<'c>(setting: Pin<&'c mut Setting>, val: f64) -> Result<()>;
+        unsafe fn setString<'c>(setting: Pin<&'c mut Setting>, val: &CxxString) -> Result<()>;
         // Cannot use "[unsigned] long long" directly for now
         unsafe fn lookupValueI64FromSetting(
             setting: &Setting,
@@ -64,6 +70,11 @@ pub mod ffi {
             path: *const c_char,
             value: &mut u64,
         ) -> bool;
+        unsafe fn addSetting<'c>(
+            setting: Pin<&'c mut Setting>,
+            name: &CxxString,
+            libtype: LibType,
+        ) -> Result<Pin<&'c mut Setting>>;
         unsafe fn tryBoolFromSetting(setting: &Setting) -> Result<bool>;
         unsafe fn tryI32FromSetting(setting: &Setting) -> Result<i32>;
         unsafe fn tryI64FromSetting(setting: &Setting) -> Result<i64>;

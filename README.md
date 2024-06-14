@@ -42,7 +42,7 @@ Rust wrapper of	the C++ [libconfig](https://github.com/hyperrealm/libconfig) lib
 - [x] lookupValue (float)
 - [x] lookupValue (double)
 - [x] lookupValue (std::string)
-- [ ] add
+- [x] add
 - [ ] remove
 - [ ] remove(index)
 - [x] getName

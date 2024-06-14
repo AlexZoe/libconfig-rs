@@ -110,6 +110,75 @@ impl<'a> Setting<'a> {
         }
     }
 
+    pub fn set_bool(&mut self, val: bool) -> Result<(), LibconfigError> {
+        unsafe {
+            match libconfig_sys::ffi::setBool(self.inner.as_mut(), val) {
+                Ok(_) => Ok(()),
+                Err(_) => Err(LibconfigError::Invalid),
+            }
+        }
+    }
+
+    pub fn set_i32(&mut self, val: i32) -> Result<(), LibconfigError> {
+        unsafe {
+            match libconfig_sys::ffi::setI32(self.inner.as_mut(), val) {
+                Ok(_) => Ok(()),
+                Err(_) => Err(LibconfigError::Invalid),
+            }
+        }
+    }
+
+    pub fn set_i64(&mut self, val: i64) -> Result<(), LibconfigError> {
+        unsafe {
+            match libconfig_sys::ffi::setI64(self.inner.as_mut(), val) {
+                Ok(_) => Ok(()),
+                Err(_) => Err(LibconfigError::Invalid),
+            }
+        }
+    }
+
+    pub fn set_f32(&mut self, val: f32) -> Result<(), LibconfigError> {
+        unsafe {
+            match libconfig_sys::ffi::setF32(self.inner.as_mut(), val) {
+                Ok(_) => Ok(()),
+                Err(_) => Err(LibconfigError::Invalid),
+            }
+        }
+    }
+
+    pub fn set_f64(&mut self, val: f64) -> Result<(), LibconfigError> {
+        unsafe {
+            match libconfig_sys::ffi::setF64(self.inner.as_mut(), val) {
+                Ok(_) => Ok(()),
+                Err(_) => Err(LibconfigError::Invalid),
+            }
+        }
+    }
+
+    pub fn set_str(&mut self, val: &str) -> Result<(), LibconfigError> {
+        unsafe {
+            let_cxx_string!(s = val);
+            match libconfig_sys::ffi::setString(self.inner.as_mut(), &s) {
+                Ok(_) => Ok(()),
+                Err(_) => Err(LibconfigError::Invalid),
+            }
+        }
+    }
+
+    pub fn add_setting(
+        &'a mut self,
+        path: &str,
+        setting_type: LibType,
+    ) -> Result<Setting<'a>, LibconfigError> {
+        unsafe {
+            let_cxx_string!(s = path);
+            match libconfig_sys::ffi::addSetting(self.inner.as_mut(), &s, setting_type) {
+                Ok(setting) => Ok(Setting { inner: setting }),
+                Err(_) => Err(LibconfigError::Invalid),
+            }
+        }
+    }
+
     pub fn get_name(&'a self) -> Option<&'a str> {
         unsafe {
             match self.inner.as_ref().getName() {
@@ -708,5 +777,15 @@ mod tests {
         } else {
             assert!(false);
         }
+    }
+
+    #[test]
+    fn write_setting() {
+        let mut cfg = Config::new();
+        assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
+        let mut setting = cfg.get_root();
+        let setting = setting.add_setting("new_val", LibType::TypeInt);
+        _ = setting.unwrap().set_i32(5);
+        _ = cfg.write_file("../input/test.cfg");
     }
 }
