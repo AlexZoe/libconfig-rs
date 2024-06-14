@@ -68,6 +68,14 @@ auto addSetting(Setting &setting, const std::string &name, Setting::Type type)
   return setting.add(name, type);
 }
 
+auto removeSetting(Setting &setting, const std::string &name) {
+  setting.remove(name);
+}
+
+auto removeSettingByIndex(Setting &setting, uint32_t idx) {
+  setting.remove(idx);
+}
+
 auto tryBoolFromSetting(const Setting &setting) -> bool { return setting; }
 auto tryI32FromSetting(const Setting &setting) -> int32_t { return setting; }
 auto tryI64FromSetting(const Setting &setting) -> int64_t { return setting; }

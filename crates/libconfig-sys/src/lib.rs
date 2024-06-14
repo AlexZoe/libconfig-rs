@@ -75,6 +75,8 @@ pub mod ffi {
             name: &CxxString,
             libtype: LibType,
         ) -> Result<Pin<&'c mut Setting>>;
+        unsafe fn removeSetting<'c>(setting: Pin<&'c mut Setting>, name: &CxxString) -> Result<()>;
+        unsafe fn removeSettingByIndex<'c>(setting: Pin<&'c mut Setting>, idx: u32) -> Result<()>;
         unsafe fn tryBoolFromSetting(setting: &Setting) -> Result<bool>;
         unsafe fn tryI32FromSetting(setting: &Setting) -> Result<i32>;
         unsafe fn tryI64FromSetting(setting: &Setting) -> Result<i64>;

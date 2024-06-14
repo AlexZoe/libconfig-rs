@@ -165,7 +165,26 @@ impl<'a> Setting<'a> {
         }
     }
 
-    pub fn add_setting(
+    pub fn remove(&'a mut self, path: &str) -> Result<(), LibconfigError> {
+        unsafe {
+            let_cxx_string!(s = path);
+            match libconfig_sys::ffi::removeSetting(self.inner.as_mut(), &s) {
+                Ok(_) => Ok(()),
+                Err(_) => Err(LibconfigError::Invalid),
+            }
+        }
+    }
+
+    pub fn remove_idx(&'a mut self, idx: usize) -> Result<(), LibconfigError> {
+        unsafe {
+            match libconfig_sys::ffi::removeSettingByIndex(self.inner.as_mut(), idx as u32) {
+                Ok(_) => Ok(()),
+                Err(_) => Err(LibconfigError::Invalid),
+            }
+        }
+    }
+
+    pub fn add(
         &'a mut self,
         path: &str,
         setting_type: LibType,
@@ -784,7 +803,7 @@ mod tests {
         let mut cfg = Config::new();
         assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         let mut setting = cfg.get_root();
-        let setting = setting.add_setting("new_val", LibType::TypeInt);
+        let setting = setting.add("new_val", LibType::TypeInt);
         _ = setting.unwrap().set_i32(5);
         _ = cfg.write_file("../input/test.cfg");
     }
