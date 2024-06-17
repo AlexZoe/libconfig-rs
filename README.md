@@ -51,7 +51,8 @@ Rust wrapper of	the C++ [libconfig](https://github.com/hyperrealm/libconfig) lib
 - [x] isRoot
 - [x] getIndex
 - [x] getType
-- [ ] getFormat
+- [x] getFormat
+- [x] setFormat
 - [x] exists
 - [x] iterator
 - [x] getLength

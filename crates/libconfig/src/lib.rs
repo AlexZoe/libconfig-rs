@@ -9,7 +9,8 @@ use std::marker::PhantomData;
 use std::pin::Pin;
 use thiserror::Error;
 
-pub use libconfig_sys::ffi::LibType;
+pub use libconfig_sys::ffi::Format;
+pub use libconfig_sys::ffi::Type;
 
 #[derive(Error, Debug, PartialEq)]
 pub enum LibconfigError {
@@ -187,7 +188,7 @@ impl<'a> Setting<'a> {
     pub fn add(
         &'a mut self,
         path: &str,
-        setting_type: LibType,
+        setting_type: Type,
     ) -> Result<Setting<'a>, LibconfigError> {
         unsafe {
             let_cxx_string!(s = path);
@@ -237,8 +238,18 @@ impl<'a> Setting<'a> {
         }
     }
 
-    pub fn get_type(&self) -> LibType {
+    pub fn get_type(&self) -> Type {
         unsafe { self.inner.getType() }
+    }
+
+    pub fn get_format(&self) -> Format {
+        unsafe { self.inner.getFormat() }
+    }
+
+    pub fn set_format(&'a mut self, format: Format) {
+        unsafe {
+            self.inner.as_mut().setFormat(format);
+        }
     }
 
     pub fn get_length(&self) -> Result<i32, LibconfigError> {
@@ -739,7 +750,7 @@ mod tests {
         let mut cfg = Config::new();
         assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         if let Ok(setting) = cfg.get_root().lookup("outer").unwrap().lookup("inner") {
-            assert_eq!(setting.get_type(), LibType::TypeInt);
+            assert_eq!(setting.get_type(), Type::TypeInt);
         } else {
             assert!(false);
         }
@@ -750,7 +761,7 @@ mod tests {
         let mut cfg = Config::new();
         assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         if let Ok(setting) = cfg.get_root().lookup("outer") {
-            assert_eq!(setting.get_type(), LibType::TypeGroup);
+            assert_eq!(setting.get_type(), Type::TypeGroup);
         } else {
             assert!(false);
         }
@@ -761,7 +772,7 @@ mod tests {
         let mut cfg = Config::new();
         assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         if let Ok(setting) = cfg.get_root().lookup("val_int") {
-            assert_eq!(setting.get_type(), LibType::TypeInt);
+            assert_eq!(setting.get_type(), Type::TypeInt);
             let mut iter = setting.into_iter();
             assert!(iter.next().is_none());
         } else {
@@ -774,7 +785,7 @@ mod tests {
         let mut cfg = Config::new();
         assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         if let Ok(setting) = cfg.get_root().lookup("arr") {
-            assert_eq!(setting.get_type(), LibType::TypeArray);
+            assert_eq!(setting.get_type(), Type::TypeArray);
             let mut iter = setting.into_iter();
             assert_eq!(iter.next().unwrap().try_into(), Ok(3));
         } else {
@@ -787,7 +798,7 @@ mod tests {
         let mut cfg = Config::new();
         assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         if let Ok(setting) = cfg.get_root().lookup("arr") {
-            assert_eq!(setting.get_type(), LibType::TypeArray);
+            assert_eq!(setting.get_type(), Type::TypeArray);
             let mut iter = setting.into_iter();
             assert_eq!(iter.next().unwrap().try_into(), Ok(3));
             assert_eq!(iter.next().unwrap().try_into(), Ok(5));
@@ -803,7 +814,7 @@ mod tests {
         let mut cfg = Config::new();
         assert_eq!(cfg.read_file("../input/test.cfg"), Ok(()));
         let mut setting = cfg.get_root();
-        let setting = setting.add("new_val", LibType::TypeInt);
+        let setting = setting.add("new_val", Type::TypeInt);
         _ = setting.unwrap().set_i32(5);
         _ = cfg.write_file("../input/test.cfg");
     }

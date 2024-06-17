@@ -28,7 +28,8 @@ static void trycatch(Try &&func, Fail &&fail) noexcept try {
 }  // namespace behavior
 }  // namespace rust
 
-typedef libconfig::Setting::Type LibType;
+typedef libconfig::Setting::Type Type;
+typedef libconfig::Setting::Format Format;
 
 namespace libconfig {
 

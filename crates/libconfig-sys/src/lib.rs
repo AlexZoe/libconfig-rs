@@ -3,7 +3,7 @@ pub mod ffi {
 
     #[derive(Debug)]
     #[repr(u32)]
-    enum LibType {
+    enum Type {
         TypeNone,
         TypeInt,
         TypeInt64,
@@ -15,10 +15,18 @@ pub mod ffi {
         TypeList,
     }
 
+    #[derive(Debug)]
+    #[repr(u32)]
+    enum Format {
+        FormatDefault,
+        FormatHex,
+    }
+
     unsafe extern "C++" {
         include!("libconfig-sys/include/wrapper.h");
 
-        type LibType;
+        type Type;
+        type Format;
 
         type Setting;
         type SettingIterator;
@@ -43,7 +51,9 @@ pub mod ffi {
         unsafe fn getName(self: &Setting) -> *const c_char;
         unsafe fn isRoot(self: &Setting) -> bool;
         unsafe fn getIndex(self: &Setting) -> i32;
-        unsafe fn getType(self: &Setting) -> LibType;
+        unsafe fn getType(self: &Setting) -> Type;
+        unsafe fn getFormat(self: &Setting) -> Format;
+        unsafe fn setFormat(self: Pin<&mut Setting>, format: Format);
         unsafe fn getLength(self: &Setting) -> Result<i32>;
         unsafe fn isGroup(self: &Setting) -> bool;
         unsafe fn isArray(self: &Setting) -> bool;
@@ -73,7 +83,7 @@ pub mod ffi {
         unsafe fn addSetting<'c>(
             setting: Pin<&'c mut Setting>,
             name: &CxxString,
-            libtype: LibType,
+            libtype: Type,
         ) -> Result<Pin<&'c mut Setting>>;
         unsafe fn removeSetting<'c>(setting: Pin<&'c mut Setting>, name: &CxxString) -> Result<()>;
         unsafe fn removeSettingByIndex<'c>(setting: Pin<&'c mut Setting>, idx: u32) -> Result<()>;
