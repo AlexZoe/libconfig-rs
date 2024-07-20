@@ -1,7 +1,10 @@
 use cxx::{let_cxx_string, UniquePtr};
 use libconfig_sys::ffi::{
-    getParentFromSetting, getPathFromSetting, getRootFromConfig, lookupSettingFromConfig,
-    lookupSettingFromSetting, lookupValueI64FromConfig, lookupValueI64FromSetting, Config_ctor,
+    addSetting, getNextFromIter, getParentFromSetting, getPathFromSetting, getRootFromConfig,
+    getSettingIter, lookupSettingFromConfig, lookupSettingFromSetting, lookupValueI64FromConfig,
+    lookupValueI64FromSetting, removeSetting, removeSettingByIndex, setBool, setF32, setF64,
+    setI32, setI64, setString, tryBoolFromSetting, tryF32FromSetting, tryF64FromSetting,
+    tryI32FromSetting, tryI64FromSetting, tryStringFromSetting, Config_ctor,
 };
 use std::borrow::BorrowMut;
 use std::ffi::{CStr, CString};
@@ -14,7 +17,7 @@ pub use libconfig_sys::ffi::Type;
 
 #[derive(Error, Debug, PartialEq)]
 pub enum LibconfigError {
-    #[error("invalid file")]
+    #[error("invalid operation")]
     Invalid,
 }
 
@@ -113,7 +116,7 @@ impl<'a> Setting<'a> {
 
     pub fn set_bool(&mut self, val: bool) -> Result<(), LibconfigError> {
         unsafe {
-            match libconfig_sys::ffi::setBool(self.inner.as_mut(), val) {
+            match setBool(self.inner.as_mut(), val) {
                 Ok(_) => Ok(()),
                 Err(_) => Err(LibconfigError::Invalid),
             }
@@ -122,7 +125,7 @@ impl<'a> Setting<'a> {
 
     pub fn set_i32(&mut self, val: i32) -> Result<(), LibconfigError> {
         unsafe {
-            match libconfig_sys::ffi::setI32(self.inner.as_mut(), val) {
+            match setI32(self.inner.as_mut(), val) {
                 Ok(_) => Ok(()),
                 Err(_) => Err(LibconfigError::Invalid),
             }
@@ -131,7 +134,7 @@ impl<'a> Setting<'a> {
 
     pub fn set_i64(&mut self, val: i64) -> Result<(), LibconfigError> {
         unsafe {
-            match libconfig_sys::ffi::setI64(self.inner.as_mut(), val) {
+            match setI64(self.inner.as_mut(), val) {
                 Ok(_) => Ok(()),
                 Err(_) => Err(LibconfigError::Invalid),
             }
@@ -140,7 +143,7 @@ impl<'a> Setting<'a> {
 
     pub fn set_f32(&mut self, val: f32) -> Result<(), LibconfigError> {
         unsafe {
-            match libconfig_sys::ffi::setF32(self.inner.as_mut(), val) {
+            match setF32(self.inner.as_mut(), val) {
                 Ok(_) => Ok(()),
                 Err(_) => Err(LibconfigError::Invalid),
             }
@@ -149,7 +152,7 @@ impl<'a> Setting<'a> {
 
     pub fn set_f64(&mut self, val: f64) -> Result<(), LibconfigError> {
         unsafe {
-            match libconfig_sys::ffi::setF64(self.inner.as_mut(), val) {
+            match setF64(self.inner.as_mut(), val) {
                 Ok(_) => Ok(()),
                 Err(_) => Err(LibconfigError::Invalid),
             }
@@ -159,7 +162,7 @@ impl<'a> Setting<'a> {
     pub fn set_str(&mut self, val: &str) -> Result<(), LibconfigError> {
         unsafe {
             let_cxx_string!(s = val);
-            match libconfig_sys::ffi::setString(self.inner.as_mut(), &s) {
+            match setString(self.inner.as_mut(), &s) {
                 Ok(_) => Ok(()),
                 Err(_) => Err(LibconfigError::Invalid),
             }
@@ -169,7 +172,7 @@ impl<'a> Setting<'a> {
     pub fn remove(&'a mut self, path: &str) -> Result<(), LibconfigError> {
         unsafe {
             let_cxx_string!(s = path);
-            match libconfig_sys::ffi::removeSetting(self.inner.as_mut(), &s) {
+            match removeSetting(self.inner.as_mut(), &s) {
                 Ok(_) => Ok(()),
                 Err(_) => Err(LibconfigError::Invalid),
             }
@@ -178,7 +181,7 @@ impl<'a> Setting<'a> {
 
     pub fn remove_idx(&'a mut self, idx: usize) -> Result<(), LibconfigError> {
         unsafe {
-            match libconfig_sys::ffi::removeSettingByIndex(self.inner.as_mut(), idx as u32) {
+            match removeSettingByIndex(self.inner.as_mut(), idx as u32) {
                 Ok(_) => Ok(()),
                 Err(_) => Err(LibconfigError::Invalid),
             }
@@ -192,7 +195,7 @@ impl<'a> Setting<'a> {
     ) -> Result<Setting<'a>, LibconfigError> {
         unsafe {
             let_cxx_string!(s = path);
-            match libconfig_sys::ffi::addSetting(self.inner.as_mut(), &s, setting_type) {
+            match addSetting(self.inner.as_mut(), &s, setting_type) {
                 Ok(setting) => Ok(Setting { inner: setting }),
                 Err(_) => Err(LibconfigError::Invalid),
             }
@@ -294,7 +297,7 @@ impl<'a> TryInto<bool> for Setting<'a> {
     type Error = LibconfigError;
     fn try_into(self) -> Result<bool, Self::Error> {
         unsafe {
-            match libconfig_sys::ffi::tryBoolFromSetting(&self.inner) {
+            match tryBoolFromSetting(&self.inner) {
                 Err(_) => Err(LibconfigError::Invalid),
                 Ok(val) => Ok(val),
             }
@@ -306,7 +309,7 @@ impl<'a> TryInto<i32> for Setting<'a> {
     type Error = LibconfigError;
     fn try_into(self) -> Result<i32, Self::Error> {
         unsafe {
-            match libconfig_sys::ffi::tryI32FromSetting(&self.inner) {
+            match tryI32FromSetting(&self.inner) {
                 Err(_) => Err(LibconfigError::Invalid),
                 Ok(val) => Ok(val),
             }
@@ -318,7 +321,7 @@ impl<'a> TryInto<i64> for Setting<'a> {
     type Error = LibconfigError;
     fn try_into(self) -> Result<i64, Self::Error> {
         unsafe {
-            match libconfig_sys::ffi::tryI64FromSetting(&self.inner) {
+            match tryI64FromSetting(&self.inner) {
                 Err(_) => Err(LibconfigError::Invalid),
                 Ok(val) => Ok(val),
             }
@@ -330,7 +333,7 @@ impl<'a> TryInto<f32> for Setting<'a> {
     type Error = LibconfigError;
     fn try_into(self) -> Result<f32, Self::Error> {
         unsafe {
-            match libconfig_sys::ffi::tryF32FromSetting(&self.inner) {
+            match tryF32FromSetting(&self.inner) {
                 Err(_) => Err(LibconfigError::Invalid),
                 Ok(val) => Ok(val),
             }
@@ -342,7 +345,7 @@ impl<'a> TryInto<f64> for Setting<'a> {
     type Error = LibconfigError;
     fn try_into(self) -> Result<f64, Self::Error> {
         unsafe {
-            match libconfig_sys::ffi::tryF64FromSetting(&self.inner) {
+            match tryF64FromSetting(&self.inner) {
                 Err(_) => Err(LibconfigError::Invalid),
                 Ok(val) => Ok(val),
             }
@@ -354,7 +357,7 @@ impl<'a> TryInto<String> for Setting<'a> {
     type Error = LibconfigError;
     fn try_into(self) -> Result<String, Self::Error> {
         unsafe {
-            match libconfig_sys::ffi::tryStringFromSetting(&self.inner) {
+            match tryStringFromSetting(&self.inner) {
                 Err(_) => Err(LibconfigError::Invalid),
                 Ok(val) => Ok(String::from(&*val.to_string())),
             }
@@ -371,7 +374,7 @@ impl<'a> Iterator for SettingIter<'a> {
             self.count += 1;
             unsafe {
                 Some(Setting {
-                    inner: libconfig_sys::ffi::getNextFromIter(
+                    inner: getNextFromIter(
                         self.inner.as_mut().unwrap().borrow_mut(),
                     ),
                 })
@@ -386,7 +389,7 @@ impl<'a> IntoIterator for Setting<'a> {
 
     fn into_iter(mut self) -> Self::IntoIter {
         unsafe {
-            if let Ok(iter) = libconfig_sys::ffi::getSettingIter(self.inner.as_mut()) {
+            if let Ok(iter) = getSettingIter(self.inner.as_mut()) {
                 Self::IntoIter {
                     inner: Some(iter),
                     count: 0,
